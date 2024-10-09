@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Webcam Stream Sender</title>
+<style>
+#container {
+	margin: 0px auto;
+	width: 500px;
+	height: 375px;
+	border: 10px #333 solid;
+}
+#videoElement {
+	width: 500px;
+	height: 375px;
+	background-color: #666;
+}
+</style>
+</head>
+<body>
+<div id="container">
+	<video autoplay="true" id="videoElement"></video>
+</div>
+
+<script>
+var video = document.querySelector("#videoElement");
+var peerConnection;
+var signalingServerUrl = "ws://localhost:8080"; // Replace with your signaling server
+
+if (navigator.mediaDevices.getUserMedia) {
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(function (stream) {
+      video.srcObject = stream;
+
+      // Initialize Peer Connection
+      peerConnection = new RTCPeerConnection();
+
+      // Add webcam stream to PeerConnection
+      stream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, stream);
+      });
+
+      // Connect to the signaling server
+      var signalingSocket = new WebSocket(signalingServerUrl);
+
+      // Handle signaling messages (offer, answer, ICE candidates)
+      signalingSocket.onmessage = function(message) {
+        var data = JSON.parse(message.data);
+
+        if (data.offer) {
+          // Respond to an offer
+          peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+          peerConnection.createAnswer().then(answer => {
+            peerConnection.setLocalDescription(answer);
+            signalingSocket.send(JSON.stringify({ answer: answer }));
+          });
+        }
+      };
+
+      // Send offer to the signaling server
+      peerConnection.createOffer().then(offer => {
+        peerConnection.setLocalDescription(offer);
+        signalingSocket.send(JSON.stringify({ offer: offer }));
+      });
+
+      // Send ICE candidates
+      peerConnection.onicecandidate = function(event) {
+        if (event.candidate) {
+          signalingSocket.send(JSON.stringify({ candidate: event.candidate }));
+        }
+      };
+    })
+    .catch(function (error) {
+      console.log("Error accessing webcam:", error);
+    });
+}
+</script>
+</body>
+</html>
