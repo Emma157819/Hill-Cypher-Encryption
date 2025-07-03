@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spy Cipher</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Spy Cipher Terminal</h1>
+        <div class="terminal">
+            <div class="mode-switch">
+                <button class="btn active" onclick="switchMode('encrypt')">Encrypt</button>
+                <button class="btn" onclick="switchMode('decrypt')">Decrypt</button>
+            </div>
+            <div class="input-area">
+                <textarea id="inputText" placeholder="Enter your message (letters, numbers, symbols)..."></textarea>
+                <input type="password" id="secretCode" placeholder="Secret Code (Decrypt Only)" style="display: none;">
+            </div>
+            <button class="execute-btn" onclick="execute()">Execute Mission</button>
+            <div class="output" id="output">Awaiting transmission...</div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
